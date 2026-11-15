@@ -116,6 +116,12 @@ export function isRoutineProblemRun(run: { status: RoutineRunStatus }): boolean 
   return ROUTINE_PROBLEM_STATUSES.includes(run.status);
 }
 
+/** A missed row that only counts occurrences skipped while the routine was otherwise at work, or while its tries are
+ * spaced out, and that the owner was not told about: it belongs in the history, and is never the routine's latest result. */
+export function isCountedSkip(run: Pick<RoutineRun, "skipped">): boolean {
+  return run.skipped !== undefined && run.skipped.told !== true;
+}
+
 /** The logs view's status filter: every run, the composite problem set the
  * indicators count, or one exact status. */
 export type RoutineRunStatusFilter = "all" | "problems" | RoutineRunStatus;
@@ -225,6 +231,9 @@ export interface RoutineRun {
   deliver?: RoutineDelivery;
   /** The items its routine's checks handed this run, so they are kept or released once it ends. */
   checkKey?: string;
+  /** On a missed row that stands for occurrences skipped for one cause: how many, the first and last scheduled time,
+   * and whether the owner was told. Its `error` says why. */
+  skipped?: { count: number; firstAt: number; lastAt: number; told?: true };
   createdAt: number;
   seenAt?: number;
 }

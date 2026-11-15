@@ -129,6 +129,16 @@ describe("routine list", () => {
     expect(list({ routines: [{ ...routine, enabled: false }] })).not.toContain("Next Jan");
   });
 
+  it("keeps showing the run at work as the latest while occurrences are skipped behind it", () => {
+    const working = { ...run, id: "working", createdAt: 200, scheduledFor: 200, status: "running" as const, output: undefined };
+    const counted = { ...run, id: "counted", createdAt: 300, scheduledFor: 300, status: "missed" as const, output: undefined, seenAt: 300,
+      error: "Skipped 4 scheduled runs because the previous run of this routine is still running", skipped: { count: 4, firstAt: 300, lastAt: 900 } };
+    expect(latestRoutineRun(routine.id, [working, counted])).toBe(working);
+    expect(list({ runs: [working, counted] })).toContain("Latest: Running");
+    const told = { ...counted, seenAt: undefined, skipped: { ...counted.skipped, told: true as const } };
+    expect(latestRoutineRun(routine.id, [working, told])).toBe(told);
+  });
+
   it("chooses a new pending run ahead of an older run that finished later", () => {
     const pending = { ...run, id: "new", createdAt: 200, scheduledFor: 200, status: "waiting" as const, attention: "Waiting for work it handed on to finish" };
     expect(latestRoutineRun(routine.id, [{ ...run, finishedAt: 300 }, pending])).toBe(pending);

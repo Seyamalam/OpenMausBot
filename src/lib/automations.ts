@@ -4,7 +4,7 @@ import { cronPresetText, cronText } from "@/lib/cron-text";
 import { clockOptions } from "@/lib/clock-time";
 import { activeLocale, t } from "@/lib/i18n";
 import type { LocaleKey } from "@/locales";
-import { ROUTINE_HANDOFF_WAIT, isRoutineProblemRun, type Routine, type RoutineRun, type RoutineSchedule } from "@/lib/routines";
+import { ROUTINE_HANDOFF_WAIT, isCountedSkip, isRoutineProblemRun, type Routine, type RoutineRun, type RoutineSchedule } from "@/lib/routines";
 import type { WebhookAttempt, WebhookTrigger } from "@/lib/webhooks";
 import type { AppTrigger } from "@/lib/app-triggers";
 import { appProblem, appStatusParts, appWhen, skippedToday } from "@/lib/app-automations";
@@ -239,6 +239,8 @@ export interface AutomationStatus {
 }
 
 const isProblem = (run: RoutineRun) => run.status === "failed" || run.status === "missed";
+/** The automation's newest run that started or was due to: not one still queued, nor a row that only counts skipped occurrences. */
+export const latestRun = (automation: Pick<Automation, "runs">): RoutineRun | undefined => automation.runs.find((run) => run.status !== "queued" && !isCountedSkip(run));
 const SIGNED_OUT = /sign(ed)?[ -]?(in|out)\b|log(ged)?[ -]?(in|out)\b|unauthori[sz]ed|\b401\b|not authenticated|authentication (failed|required)|(token|session|credential)s? (has |have )?expired|expired (token|session|credential)|invalid api key|reconnect/i;
 const OUT_OF_CREDIT = /credit|quota|billing|payment|insufficient|out of tokens|usage limit|rate.?limit|\b429\b|limit (reached|exceeded)|plan limit/i;
 const OUT_OF_TIME = /run limit|time limit|timed out|minute limit/i;
@@ -268,7 +270,7 @@ export function automationStatus(automation: Pick<Automation, "enabled" | "runs"
   const app = automation.appTrigger && appProblem(automation.appTrigger);
   if (app) return { state: "needs-you", ...app };
   if (automation.checkTrouble) return { state: "needs-you", reason: routineLineText(automation.checkTroubleCode, automation.checkTrouble), fix: SIGNED_OUT.test(automation.checkTrouble) ? "reconnect" : "run" };
-  const settled = automation.runs.filter((run) => run.status !== "cancelled" && run.status !== "queued");
+  const settled = automation.runs.filter((run) => run.status !== "cancelled" && run.status !== "queued" && !isCountedSkip(run));
   const latest = settled[0];
   if (runAwaitingAnswer(settled)) return { state: "needs-you", reason: t("automations.reason.answer"), fix: "answer" };
   if (latest && isProblem(latest)) {
@@ -314,7 +316,7 @@ export function statusLine(automation: Automation, now = Date.now()): string {
   const first = firstRunLine(automation, now);
   if (first) return automation.readsAndDrafts ? `${first} · ${t("automations.readsAndDrafts")}` : first;
   const status = automationStatus(automation, now);
-  const latest = automation.runs.find((run) => run.status !== "queued");
+  const latest = latestRun(automation);
   const parts = [t(STATUS_WORD[status.state])];
   if (latest?.status === "running") parts.push(t("automations.runningNow"));
   else if (automation.checkedAt !== undefined && (!latest || automation.checkedAt >= (latest.finishedAt ?? runTime(latest)))) parts.push(t("automations.checkedNothingNew", { when: lastWhen(automation.checkedAt, now) }));
