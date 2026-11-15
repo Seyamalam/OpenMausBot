@@ -56,7 +56,23 @@ export function settleAsk(run: RoutineRun, event: Resolved | undefined, now: num
   return ask.approval && event?.source === "timeout" ? `Stopped: nobody answered the approval ${ask.subject}` : null;
 }
 
-/** Time the run has worked: waiting on the person never counts toward its limit. */
+/** Time the run has worked since it last started, as a routine's own limit (`timeoutMinutes`) counts it. `startedAt` is
+ * set anew by every start, so time queued (behind a busy bot, for a retry, for a usage limit's reset) is never in it;
+ * the time an approval or question of its own was open is taken out. Any other wait stays in. */
 export function activeMs(run: Pick<RoutineRun, "startedAt" | "waitedMs" | "asked">, now: number): number {
   return now - (run.startedAt ?? now) - (run.waitedMs ?? 0) - (run.asked ? Math.max(0, now - run.asked.since) : 0);
+}
+
+/** The run goes back to work, and the wait it leaves is added to `restedMs`. */
+export function resumeWork(run: RoutineRun, now: number): void {
+  if (run.status === "waiting" && run.waitingSince !== undefined) run.restedMs = (run.restedMs ?? 0) + Math.max(0, now - run.waitingSince);
+  Object.assign(run, { status: "running", attention: undefined } satisfies Partial<RoutineRun>);
+}
+
+/** Time the run has spent in status `running` since it last started, which is what the default run limit counts: no
+ * time queued, and no time waiting, whether on the person's approval or answer, on a conversation parked on them, or on
+ * work handed to teammates. */
+export function workedMs(run: Pick<RoutineRun, "status" | "startedAt" | "restedMs" | "waitingSince">, now: number): number {
+  const waiting = run.status === "waiting" && run.waitingSince !== undefined ? Math.max(0, now - run.waitingSince) : 0;
+  return now - (run.startedAt ?? now) - (run.restedMs ?? 0) - waiting;
 }

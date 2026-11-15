@@ -56,9 +56,9 @@ describe("schedulerDueOf: when this process's scheduler next has work", () => {
   type Run = Parameters<typeof schedulerDueOf>[1][number];
   const run = (fields: Partial<Run>) => ({ status: "running", ...fields }) as Run;
 
-  it("is null with nothing enabled, queued or limited", () => {
+  it("is null with nothing enabled, queued or started", () => {
     expect(schedulerDueOf([], [], NOW, NOW)).toBeNull();
-    expect(schedulerDueOf([{ enabled: false, nextRunAt: NOW }], [run({ status: "completed" }), run({ startedAt: NOW })], NOW, NOW)).toBeNull();
+    expect(schedulerDueOf([{ enabled: false, nextRunAt: NOW }], [run({ status: "completed" }), run({ status: "failed", startedAt: NOW })], NOW, NOW)).toBeNull();
   });
 
   it("the next run, a check no sooner than checks may start, and a check's meeting wake", () => {
@@ -79,5 +79,9 @@ describe("schedulerDueOf: when this process's scheduler next has work", () => {
     expect(schedulerDueOf([], [run({ startedAt: NOW - 10 * MINUTE, timeoutMinutes: 30 })], NOW, NOW)).toBe(NOW + 20 * MINUTE);
     expect(schedulerDueOf([], [run({ status: "waiting", startedAt: NOW - 10 * MINUTE, waitedMs: 5 * MINUTE, timeoutMinutes: 30 })], NOW, NOW)).toBe(NOW + 25 * MINUTE);
     expect(schedulerDueOf([], [run({ startedAt: NOW - 40 * MINUTE, timeoutMinutes: 30 })], NOW, NOW)).toBe(NOW);
+    expect(schedulerDueOf([], [run({ startedAt: NOW - 10 * MINUTE })], NOW, NOW)).toBe(NOW + 170 * MINUTE);
+    expect(schedulerDueOf([], [run({ startedAt: NOW - 400 * MINUTE, restedMs: 300 * MINUTE })], NOW, NOW)).toBe(NOW + 80 * MINUTE);
+    expect(schedulerDueOf([], [run({ status: "waiting", startedAt: NOW - 400 * MINUTE, waitingSince: NOW - 300 * MINUTE })], NOW, NOW)).toBeNull();
+    expect(schedulerDueOf([], [run({ status: "waiting", startedAt: NOW - 10 * MINUTE, timeoutMinutes: 30, asked: { approval: true, subject: "to run it", since: NOW - MINUTE } })], NOW, NOW)).toBeNull();
   });
 });

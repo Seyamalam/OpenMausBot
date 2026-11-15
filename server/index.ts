@@ -2848,7 +2848,7 @@ const phones = createPhones({
   active: (turn) => internalCapabilityIsActive(turn as InternalCapability),
 });
 const cloudPlanTier = createCloudPlanTier({ dataDir: DATA_DIR, cloudHome: Boolean(CLOUD_HOME), changed: () => broadcast({ kind: "config", ...configStatus() }) }); const starterAwake = createStarterAwake({ dataDir: DATA_DIR, starter: () => cloudPlanTier.starter(), bots: () => store.bots, changed: () => broadcast({ kind: "config", ...configStatus() }) }); const starterCaps = createStarterCaps({ starter: () => cloudPlanTier.starter(), awake: starterAwake, waitsOnOthers: (threadId) => coordinator.outstandingFor(threadId).length > 0, laneOwned: (threadId) => burst.laneOwned(threadId), botName: (botId) => store.bot(botId)?.name, pausedLine: (language, limit) => serverLine(language, "server.botPaused", { limit }), refused: () => broadcast({ kind: "config", ...configStatus() }) }); engineMemory.useCap(starterCaps.engine); const botHolds = createBotHolds({ dataDir: DATA_DIR, bots: () => store.bots, line: (language, key, params) => serverLine(language, key, params), changed: () => broadcast({ kind: "config", ...configStatus() }) }); let cloudPower: CloudPower | null = null; // The sleep handshake of a plan that sleeps (server/cloud-power.ts), made just before the server listens.
-const teamWelcome = createTeamWelcomeStore(DATA_DIR); const { cloudHealth, cloudSigned } = createCloudSignedHost({ cloudHome: CLOUD_HOME, sessions, power: () => cloudPower, box: () => botBox.report(), teamAdmin: teamAdminHost(), policyChanged: nudgeCloudTeamPolicy, invited: (email, by) => teamWelcome.invited(personKey({ id: "", email }), by), memberBrowserOff: () => managedPolicy.remoteAccessRefusal() !== undefined, plan: (cancelled) => routineHolds?.plan(cancelled), planTier: (tier) => cloudPlanTier.set(tier), memberLeft: (email) => leaveTeam ? leaveTeam(email).then((result) => { botApi.manager.revokeMintedBy(personKey({ id: "", email })); teamOwners.left(email); teamMessages.inbox.forget(personKey({ id: "", email })); forgetSetupPresser(store, personKey({ id: "", email })); devsReports.forget(personKey({ id: "", email })); return result; }) : Promise.reject(new Error("not a team")), health: { store, bus, dataDir: DATA_DIR, eventsDir: EVENTS_DIR, version: serverVersion(), image: process.env.OMB_CLOUD_IMAGE,
+const teamWelcome = createTeamWelcomeStore(DATA_DIR); const { cloudHealth, cloudSigned } = createCloudSignedHost({ cloudHome: CLOUD_HOME, sessions, power: () => cloudPower, box: () => botBox.report(), teamAdmin: teamAdminHost(), policyChanged: nudgeCloudTeamPolicy, invited: (email, by) => teamWelcome.invited(personKey({ id: "", email }), by), memberBrowserOff: () => managedPolicy.remoteAccessRefusal() !== undefined, plan: (cancelled) => routineHolds?.plan(cancelled), planTier: (tier) => cloudPlanTier.set(tier), memberLeft: (email) => leaveTeam ? leaveTeam(email).then((result) => { botApi.manager.revokeMintedBy(personKey({ id: "", email })); teamOwners.left(email); teamMessages.inbox.forget(personKey({ id: "", email })); forgetSetupPresser(store, personKey({ id: "", email })); devsReports.forget(personKey({ id: "", email })); return result; }) : Promise.reject(new Error("not a team")), health: { store, bus, dataDir: DATA_DIR, eventsDir: EVENTS_DIR, version: serverVersion(), image: process.env.OMB_CLOUD_IMAGE, routines: (cap) => routines?.health(cap) ?? [], schedule: () => routines?.schedulerState() ?? { unreadable: false, slowStops: 0 },
   engines: () => registry.instances().map((instance) => ({ instanceId: instance.instanceId, driverKind: instance.driverKind, snapshot: registry.knownSnapshot(instance.instanceId) })),
   connectors: () => emailHost.health(composio.configured(cfg) ? composio.connectedServices(cfg) : null),
   browser: () => ({ available: browserReady(undefined), installing: Boolean(browserEngineInstall), interrupted: browserRuntime.interruptedCount() }), firstHour: () => firstHourHooks.health(), ...(engineMemory.enabled ? { room: () => engineMemory.dayPressure() } : {}) } });
@@ -8868,10 +8868,9 @@ routines = new RoutineManager({
     }
   },
   interruptGoal: interruptRoutineGroupGoal,
-  onRunChanged: (run) => { cloudHealth?.noteRoutineRun(run); syncRoutineRunToSource(run); },
+  onRunChanged: (run) => { syncRoutineRunToSource(run); }, onReadable: () => broadcast({ kind: "config", ...configStatus() }),
   onRunCut: (run) => run.groupId ? coordinator.cancelRoom(run.groupId, run.threadId!, ROUTINE_RESTARTED) : coordinator.cancelDirect(run.threadId!, ROUTINE_RESTARTED),
   onRunFailed: (run, alert) => {
-    cloudHealth?.noteRoutineRun(run);
     const bot = store.bot(run.botId);
     if (!bot || alert === null || run.deliver === "brief") return;
     const said = alert?.detail ?? run.error, detail = said ? `${run.routineName}: ${said}` : run.routineName;
@@ -11700,7 +11699,7 @@ function configStatus() {
   const eventLogMaxBytes = threadEventLogMaxBytes(cfg);
   const eventLogRetentionDays = threadEventLogRetentionDays(cfg);
   return {
-    cloudStarter: cloudPlanTier.starter(), waitingForRoom: engineMemory.waiting(), planTurns: starterCaps.status(), awakeLimit: starterAwake.limit(), pausedBots: starterAwake.paused(), pausedByPerson: botHolds.state(), heldBots: botHolds.heldBots(), xai: keyStatus(cfg.xai?.key),
+    cloudStarter: cloudPlanTier.starter(), waitingForRoom: engineMemory.waiting(), planTurns: starterCaps.status(), awakeLimit: starterAwake.limit(), pausedBots: starterAwake.paused(), pausedByPerson: botHolds.state(), heldBots: botHolds.heldBots(), ...(routines?.schedulerState().unreadable ? { routinesUnreadable: true } : {}), xai: keyStatus(cfg.xai?.key),
     mistral: keyStatus(cfg.mistral?.key),
     cerebras: keyStatus(cfg.cerebras?.key),
     groq: keyStatus(cfg.groq?.key), greenference: keyStatus(cfg.greenference?.key), modelgo: keyStatus(cfg.modelgo?.key),

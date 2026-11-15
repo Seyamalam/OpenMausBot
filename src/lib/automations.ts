@@ -35,6 +35,8 @@ export interface Automation {
   checkTroubleCode?: string;
   /** Its runs read and draft only. */
   readsAndDrafts?: boolean;
+  /** Its newest runs in a row whose cloud desktop did not start, while its scheduled runs are spaced out for it. */
+  noStartStreak?: number;
 }
 
 const runTime = (run: RoutineRun) => run.startedAt ?? run.scheduledFor ?? run.createdAt;
@@ -49,7 +51,7 @@ export function automationsFrom(sources: { routines: readonly Routine[]; webhook
       kind: "schedule", id: routine.id, name: routine.name, botId: routine.botId, instructions: routine.prompt, enabled: routine.enabled,
       schedule: routine.schedule, nextRunAt: routine.enabled ? routine.nextRunAt : null, runs: runsOf(routine.id),
       ...(routine.checkedAt !== undefined ? { checkedAt: routine.checkedAt } : {}), ...(routine.checkTrouble ? { checkTrouble: routine.checkTrouble, ...(routine.checkTroubleCode ? { checkTroubleCode: routine.checkTroubleCode } : {}) } : {}),
-      ...(routine.access === "read-and-draft" ? { readsAndDrafts: true } : {}),
+      ...(routine.access === "read-and-draft" ? { readsAndDrafts: true } : {}), ...(routine.noStartStreak ? { noStartStreak: routine.noStartStreak } : {}),
     })),
     ...sources.webhooks.map((webhook): Automation => ({
       kind: "webhook", id: webhook.id, name: webhook.name, botId: webhook.botId, instructions: webhook.prompt, enabled: webhook.enabled,

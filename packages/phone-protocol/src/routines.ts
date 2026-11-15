@@ -132,7 +132,7 @@ export interface Routine {
   enabled: boolean;
   schedule: RoutineSchedule;
   durationMinutes: number;
-  /** Optional wall-clock safety limit. Missing means the run is unlimited. */
+  /** How many minutes of active work a run may do before it is stopped. Missing means the server's default, 3 hours. */
   timeoutMinutes?: number;
   overlap?: "skip" | "queue";
   /** Each run starts with the previous run's report. */
@@ -156,6 +156,9 @@ export interface Routine {
   skippedRuns?: number;
   lastSkippedAt?: number;
   failureStreak?: number;
+  /** Its newest runs in a row whose cloud computer did not start, once there are enough that its scheduled runs are
+   * spaced out for it. It stays on. */
+  noStartStreak?: number;
   /** Runs that finished in the last seven days, and how many of them completed. */
   weekRuns?: { ok: number; total: number };
   /** A plain sentence when the routine names a path that cannot exist on the computer that runs it. */

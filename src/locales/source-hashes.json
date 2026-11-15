@@ -36955,7 +36955,17 @@
       "remote.diagnosis.next.otherCopy": "29f59104ac96620533eecfef5e6bd7e612e84c6b2a6f71ebdb02550d4cd3518e",
       "devices.computers.pairButton": "60f8288e33f9f57d2b51409fdb540b47a89c25447061bd354122442818a36ee0",
       "devices.computers.pairTitle": "b7cda6a11ab410daa4b8977624ca72261c0168e7c3d83ae0eed93ac4e3540bc8",
-      "devices.computers.typeCode": "2a528dfe78f6b331e8cca951872961169ca6f340a886e40e84cc0b53d441c174"
+      "devices.computers.typeCode": "2a528dfe78f6b331e8cca951872961169ca6f340a886e40e84cc0b53d441c174",
+      "routines.noStartStreak": "fb107024c4705682465cf381239f9ecfc60e2e5dca2776c8082236b44ef38a9d",
+      "routines.unreadable": "389a5c2a0eaa1366fc44c538daef1c28f2271aba90e806be13da78c14c1d3ced",
+      "routines.server.busyTooLong": "4127f973deb204a8156c2c823319287c125b4e457d6ffe467c3597846b656d3b",
+      "routines.server.overLimit": "8e1a3ad5aec3d7358cc462e8619c11670223b57fa7584688c6cde5daa57b98a5",
+      "routines.server.skippedOne": "810d0808a5d18387746ab48b22609928a22a23b24e61683a6134003256f2da67",
+      "routines.server.skippedMany": "90adef9a8d06fb810a7de6a9f0c72047638bd816866717f0d37192b1caa76f64",
+      "routines.server.part.stillWaiting": "bbe0bd65555f33dad78b594155eba6012ec8675d62911c0e1df75554de05d0c8",
+      "routines.server.part.stillRunning": "cd6a3743e230f16c3d418e8dc5979a549b9c172ee0a959cb7d114723d0291db0",
+      "routines.server.part.notStarted": "f9dca9af97df19cd027e3c0b452cc7ec520c886f489275601d05193d32df0207",
+      "routines.server.part.computerNoStart": "1e1166d01f459bda1f8f5d5f47a750770f92da7874a0d56a5ac94edf7a3de7cd"
     },
     "zh": {
       "pro.fromPrice": "a48a04a457d60b08b54fc83e7a6c4584ffedb1e23621859084900c8521a3af7b",
@@ -47151,7 +47161,17 @@
       "chat.notice.devinAccountRefused": "6f12d9c4c2912bc75bfbc26d0b43a2da3b02c1e4e16a807a9162670fcdab80fc",
       "devices.computers.pairButton": "60f8288e33f9f57d2b51409fdb540b47a89c25447061bd354122442818a36ee0",
       "devices.computers.pairTitle": "b7cda6a11ab410daa4b8977624ca72261c0168e7c3d83ae0eed93ac4e3540bc8",
-      "devices.computers.typeCode": "2a528dfe78f6b331e8cca951872961169ca6f340a886e40e84cc0b53d441c174"
+      "devices.computers.typeCode": "2a528dfe78f6b331e8cca951872961169ca6f340a886e40e84cc0b53d441c174",
+      "routines.noStartStreak": "fb107024c4705682465cf381239f9ecfc60e2e5dca2776c8082236b44ef38a9d",
+      "routines.unreadable": "389a5c2a0eaa1366fc44c538daef1c28f2271aba90e806be13da78c14c1d3ced",
+      "routines.server.busyTooLong": "4127f973deb204a8156c2c823319287c125b4e457d6ffe467c3597846b656d3b",
+      "routines.server.overLimit": "8e1a3ad5aec3d7358cc462e8619c11670223b57fa7584688c6cde5daa57b98a5",
+      "routines.server.skippedOne": "810d0808a5d18387746ab48b22609928a22a23b24e61683a6134003256f2da67",
+      "routines.server.skippedMany": "90adef9a8d06fb810a7de6a9f0c72047638bd816866717f0d37192b1caa76f64",
+      "routines.server.part.stillWaiting": "bbe0bd65555f33dad78b594155eba6012ec8675d62911c0e1df75554de05d0c8",
+      "routines.server.part.stillRunning": "cd6a3743e230f16c3d418e8dc5979a549b9c172ee0a959cb7d114723d0291db0",
+      "routines.server.part.notStarted": "f9dca9af97df19cd027e3c0b452cc7ec520c886f489275601d05193d32df0207",
+      "routines.server.part.computerNoStart": "1e1166d01f459bda1f8f5d5f47a750770f92da7874a0d56a5ac94edf7a3de7cd"
     },
     "zh-tw": {
       "whop.description": "1a07cf04ef17029448d3781415cbac16d54e66b821907a40d94e0e6349710e70",

@@ -90,10 +90,49 @@ use an appropriate event/webhook workflow instead of a fake weekly schedule.
   for the same cron routine does not accumulate overlapping copies (a run is
   waiting while teammates still owe it results on the job runtime,
   docs/runtime-contract.md §9).
+- Every occurrence that does not run leaves a **Missed** row with its reason in
+  the routine's log. Occurrences skipped behind the same earlier run share one
+  row, which counts them ("Skipped 12 scheduled runs because the previous run
+  of this routine is still running") and keeps the first and the last time, so
+  a schedule every minute behind a long run adds one row. Such a row is shown
+  as already seen: it asks nothing of you. A run that has waited on you for 30
+  minutes when an occurrence is skipped behind it is the exception: you are
+  told once, and that row shows under To review.
+- Failures never turn a routine off. When a routine's cloud desktop does not
+  start three runs in a row, the routine stays on and its scheduled runs are
+  spaced out instead: the next one starts no sooner than an hour after the
+  third failure, and four hours after each later one, because every such run
+  spends the bot's AI for minutes before it fails. You are told once, the list
+  says "Its cloud desktop did not start N runs in a row", and the occurrences
+  held back share one Missed row. The first run whose cloud desktop starts,
+  **Run now**, or any change to the routine ends the spacing. A routine that an
+  earlier version turned off this way is turned back on at the next start when
+  it can be told apart from one you turned off: it is off without a hold, its
+  three newest results are that failure, and it has not been changed since the
+  third one ended. One you edited after it was turned off, or whose failed
+  runs are no longer in the log, stays off: turn it on in the list.
+- A run stops after 3 hours of work when its routine sets no run limit of its
+  own (5 to 240 minutes): it ends as failed with "Stopped: this run ran longer
+  than the 3-hour limit", and the schedule carries on. Work is the time since
+  the run last started that it was not waiting: the time it is queued (behind
+  a busy bot, for its one retry, for a usage limit's reset) and the time it
+  waits on your approval or answer, on a conversation left with you, or on
+  work it handed to teammates is not counted. A routine's own run limit counts
+  as before: everything but an open approval or question.
+- A run queued behind its busy bot for an hour ends as Missed ("Did not run:
+  the bot was busy for more than 60 minutes"), and the next occurrence starts
+  as usual. A run waiting behind its own routine's earlier run (overlap
+  **queue**) is not given up this way.
+- `routines.json` is written through a temporary file and a rename. If it
+  cannot be read, nothing in it is overwritten: no routine runs, changes are
+  refused, the Automations list says so, a copy of the file is kept beside it
+  (`routines.json.unreadable-…`, one per content, five at most), and the file is
+  read again every minute, so repairing or restoring it brings the routines
+  back without a restart.
 - A run that asks you for an approval or an answer waits for you. Its card and
   the Routines log say what it waits for ("Waiting for your approval to use
   COMPOSIO_SEARCH_TOOLS"), the approval notification names the routine, and the
-  time it waits does not count toward its optional run limit, which bounds
+  time it waits does not count toward its run limit, which bounds
   active work only. If the engine's own wait for an approval runs out with
   nobody's answer, the run stops with "Stopped: nobody answered the approval to
   use …" and the routine-failed notification. A run still waiting when its

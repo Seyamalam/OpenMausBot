@@ -28,6 +28,25 @@ describe("routine list", () => {
     expect(list()).not.toContain("Swap awake bots");
   });
 
+  it("says a routine whose cloud desktop keeps failing to start stays on, in the person's language", () => {
+    const markup = list({ routines: [{ ...routine, failureStreak: 3, noStartStreak: 3 }] });
+    expect(markup).toContain("Its cloud desktop did not start 3 runs in a row. This routine stays on and tries again less often until the cloud desktop starts.");
+    expect(markup).toContain("data-routine-no-start");
+    expect(list()).not.toContain("data-routine-no-start");
+    setLocale("pt-br");
+    try {
+      expect(list({ routines: [{ ...routine, noStartStreak: 4 }] })).toContain("O desktop na nuvem não iniciou em 4 execuções seguidas. Esta rotina continua ligada");
+    } finally { setLocale("en"); }
+  });
+
+  it("says saved routines could not be read instead of showing an empty list", () => {
+    const markup = list({ routines: [], runs: [], unreadable: true });
+    expect(markup).toContain("Your saved routines could not be read, so none of them can run right now. Nothing was deleted");
+    expect(markup).toContain('role="alert"');
+    expect(markup).not.toContain("No schedules yet");
+    expect(list({ routines: [], runs: [] })).not.toContain("data-routines-unreadable");
+  });
+
   it("shows saved skips and recent failure streaks without claiming all offline occurrences were counted", () => {
     const markup = list({ routines: [{ ...routine, skippedRuns: 3, lastSkippedAt: 100, failureStreak: 2 }] });
     expect(markup).toContain("Scheduled occurrences skipped while busy: 3");

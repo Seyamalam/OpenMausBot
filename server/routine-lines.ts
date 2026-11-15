@@ -20,6 +20,14 @@ export const ROUTINE_LINE = {
   "routines.server.part.provider": "a temporary error",
   "routines.server.part.failed": "a failure",
   "routines.server.backupSignedOut": "Starting again on the backup AI: this bot's AI is signed out",
+  "routines.server.busyTooLong": "Did not run: the bot was busy for more than {minutes} minutes",
+  "routines.server.overLimit": "Stopped: this run ran longer than the {hours}-hour limit",
+  "routines.server.skippedOne": "Skipped because {why}",
+  "routines.server.skippedMany": "Skipped {count} scheduled runs because {why}",
+  "routines.server.part.stillWaiting": "the previous run of this routine is still waiting",
+  "routines.server.part.stillRunning": "the previous run of this routine is still running",
+  "routines.server.part.notStarted": "the previous run of this routine has not started yet",
+  "routines.server.part.computerNoStart": "its cloud desktop has not started, so its next tries are spaced out",
 } as const;
 
 export type RoutineLineKey = keyof typeof ROUTINE_LINE;

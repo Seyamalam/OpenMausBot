@@ -11,6 +11,7 @@ import { loadAttachments, loadTimeoutMinutes } from "./routine-attachments.ts";
 import { isRoutineHoldCause } from "./routine-holds.ts";
 import { MAX_DATE_MS } from "./routine-intervals.ts";
 import { loadSchedule } from "./routine-schedules.ts";
+import { loadSkips } from "./routine-skips.ts";
 import type { Routine, RoutineGoalStatus, RoutinePackageStamp, RoutineRequestReceipt, RoutineRun, RoutineTarget } from "./routines.ts";
 
 const persistedSourceThreadId = z.string().trim().min(1).optional().catch(undefined);
@@ -114,6 +115,7 @@ export function loadRoutine(routine: Routine, now: number): Routine | null {
     heldFor: isRoutineHoldCause(routine.heldFor) ? routine.heldFor : undefined,
   };
   delete loaded.failureStreak;
+  delete loaded.noStartStreak;
   return withCheckFields(withoutUndefined(loaded, ["timeoutMinutes", "runOnStartup", "modelSelection", "installedPackage", "checkedAt", "checkTrouble", "checkTroubleCode", "wakeAt", "heldFor"]));
 }
 
@@ -132,8 +134,11 @@ export function loadRun(run: RoutineRun): RoutineRun {
     access: run.access === "read-and-draft" ? "read-and-draft" : undefined,
     deliver: run.deliver === "brief" ? "brief" : undefined,
     checkKey: typeof run.checkKey === "string" && /^[\w-]{1,128}$/.test(run.checkKey) ? run.checkKey : undefined,
+    busySince: instant(run.busySince),
+    restedMs: instant(run.restedMs),
+    skipped: loadSkips(run.skipped),
   };
-  return withoutUndefined(loaded, ["timeoutMinutes", "access", "deliver", "checkKey"]);
+  return withoutUndefined(loaded, ["timeoutMinutes", "access", "deliver", "checkKey", "busySince", "restedMs", "skipped"]);
 }
 
 const REQUEST_ACTIONS = new Set<RoutineRequestOperation["action"]>(["create", "update", "pause", "resume", "run_now", "delete"]);
