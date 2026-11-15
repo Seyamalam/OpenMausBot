@@ -32,6 +32,15 @@ describe("a routine's health, from its saved run rows", () => {
     expect(routineHealthOf([on("a"), { id: "off", enabled: false }], runs, 100).map((health) => health.routineId)).toEqual(["a", "hook"]);
   });
 
+  it("does not take a row that only counts skipped occurrences for a failure, unless the owner was told", () => {
+    const counted = run("a", "missed", 30, { skipped: { count: 4, firstAt: 25, lastAt: 30, behind: "a-20" } });
+    expect(routineHealthOf([on("a")], [run("a", "completed", 10), run("a", "failed", 20), counted], 100)).toEqual([{ routineId: "a", status: "failed", at: 20, consecutiveFailures: 1 }]);
+    expect(routineHealthOf([on("a")], [run("a", "completed", 20), counted], 100)).toEqual([{ routineId: "a", status: "completed", at: 20, consecutiveFailures: 0 }]);
+    expect(routineHealthOf([on("a")], [counted], 100)).toEqual([]);
+    const told = { ...counted, skipped: { ...counted.skipped!, told: true as const } };
+    expect(routineHealthOf([on("a")], [run("a", "failed", 20), told], 100)).toEqual([{ routineId: "a", status: "missed", at: 30, consecutiveFailures: 2 }]);
+  });
+
   it("keeps the newest up to the cap, and says nothing of a routine's words", () => {
     const runs = Array.from({ length: 5 }, (_, index) => run(`r${index}`, "failed", index + 1));
     const health = routineHealthOf(runs.map((row) => on(row.routineId)), runs, 2);

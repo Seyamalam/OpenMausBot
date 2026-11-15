@@ -25,7 +25,9 @@ describe("reading routines.json", () => {
     const file = tempFile();
     const text = JSON.stringify({ version: 1, frozenResultsCleared: true, routines: [], runs: [], holds: ["no_connections"], startupLaunchId: "launch-1" });
     writeFileSync(file, text);
-    expect(readRoutineFile(file, 0)).toMatchObject({ state: "ok", text, routines: [], runs: [], frozenPending: false, holds: ["no_connections"], startupLaunchId: "launch-1", malformedAttachments: false });
+    expect(readRoutineFile(file, 0)).toMatchObject({ state: "ok", text, routines: [], runs: [], frozenPending: false, holds: ["no_connections"], startupLaunchId: "launch-1", malformedAttachments: false, noStartOffsChecked: false });
+    writeFileSync(file, JSON.stringify({ version: 1, routines: [], runs: [], noStartOffsChecked: true }));
+    expect(readRoutineFile(file, 0)).toMatchObject({ state: "ok", noStartOffsChecked: true, startupLaunchId: undefined });
   });
 });
 

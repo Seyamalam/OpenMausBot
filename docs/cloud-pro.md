@@ -1797,10 +1797,14 @@ else `unknown`. A turn that ends in `shutdown_timeout`, `auth_required`,
 counts once too. `turns` counts turns started and failed rows per minute;
 `routines` gives, for each routine that is on and each outside trigger, its last
 outcome and its failures in a row, counted from the saved run rows at every read,
-so a restart does not start the count again. `schedule.unreadable` is true while
+so a restart does not start the count again. A row that only counts occurrences
+skipped while the routine was at work is not a result and is left out. `schedule.unreadable` is true while
 the home cannot read its saved routines (none runs until it can), and
 `schedule.slowStops` counts, since boot, the times stopping a turn took the
-scheduler longer than 10 seconds and it went on without waiting.
+scheduler longer than 10 seconds and it went on without waiting. This `schedule`
+section carries no `v`: a reader that requires a versioned section (`v: 1` with
+every field of that version) takes it as "no section", which is intended. The
+versioned section, with its required fields, comes with the run ledger.
 
 **What it never carries:** a failure's words, a bot's name, a thread's title,
 a prompt, a URL, an email address, a token, or an engine's account

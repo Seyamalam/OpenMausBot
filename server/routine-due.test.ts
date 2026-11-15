@@ -79,9 +79,11 @@ describe("schedulerDueOf: when this process's scheduler next has work", () => {
     expect(schedulerDueOf([], [run({ startedAt: NOW - 10 * MINUTE, timeoutMinutes: 30 })], NOW, NOW)).toBe(NOW + 20 * MINUTE);
     expect(schedulerDueOf([], [run({ status: "waiting", startedAt: NOW - 10 * MINUTE, waitedMs: 5 * MINUTE, timeoutMinutes: 30 })], NOW, NOW)).toBe(NOW + 25 * MINUTE);
     expect(schedulerDueOf([], [run({ startedAt: NOW - 40 * MINUTE, timeoutMinutes: 30 })], NOW, NOW)).toBe(NOW);
-    expect(schedulerDueOf([], [run({ startedAt: NOW - 10 * MINUTE })], NOW, NOW)).toBe(NOW + 170 * MINUTE);
-    expect(schedulerDueOf([], [run({ startedAt: NOW - 400 * MINUTE, restedMs: 300 * MINUTE })], NOW, NOW)).toBe(NOW + 80 * MINUTE);
-    expect(schedulerDueOf([], [run({ status: "waiting", startedAt: NOW - 400 * MINUTE, waitingSince: NOW - 300 * MINUTE })], NOW, NOW)).toBeNull();
+    // Under the default limit the scheduler comes back each minute to count the run's work, sooner when less is left.
+    expect(schedulerDueOf([], [run({ startedAt: NOW - 10 * MINUTE, target: "bot" })], NOW, NOW)).toBe(NOW + MINUTE);
+    expect(schedulerDueOf([], [run({ startedAt: NOW - 400 * MINUTE, workedMs: 180 * MINUTE - 20_000, target: "bot" })], NOW, NOW)).toBe(NOW + 20_000);
+    expect(schedulerDueOf([], [run({ startedAt: NOW - 400 * MINUTE, workedMs: 180 * MINUTE - 20_000, target: "room-goal" })], NOW, NOW)).toBe(NOW + MINUTE);
+    expect(schedulerDueOf([], [run({ status: "waiting", startedAt: NOW - 400 * MINUTE })], NOW, NOW)).toBeNull();
     expect(schedulerDueOf([], [run({ status: "waiting", startedAt: NOW - 10 * MINUTE, timeoutMinutes: 30, asked: { approval: true, subject: "to run it", since: NOW - MINUTE } })], NOW, NOW)).toBeNull();
   });
 });

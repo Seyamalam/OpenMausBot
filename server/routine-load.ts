@@ -12,7 +12,7 @@ import { isRoutineHoldCause } from "./routine-holds.ts";
 import { MAX_DATE_MS } from "./routine-intervals.ts";
 import { loadSchedule } from "./routine-schedules.ts";
 import { loadSkips } from "./routine-skips.ts";
-import type { Routine, RoutineGoalStatus, RoutinePackageStamp, RoutineRequestReceipt, RoutineRun, RoutineTarget } from "./routines.ts";
+import type { Routine, RoutineGoalStatus, RoutinePackageStamp, RoutineRequestCommit, RoutineRequestReceipt, RoutineRun, RoutineTarget } from "./routines.ts";
 
 const persistedSourceThreadId = z.string().trim().min(1).optional().catch(undefined);
 
@@ -134,11 +134,11 @@ export function loadRun(run: RoutineRun): RoutineRun {
     access: run.access === "read-and-draft" ? "read-and-draft" : undefined,
     deliver: run.deliver === "brief" ? "brief" : undefined,
     checkKey: typeof run.checkKey === "string" && /^[\w-]{1,128}$/.test(run.checkKey) ? run.checkKey : undefined,
-    busySince: instant(run.busySince),
-    restedMs: instant(run.restedMs),
+    busyMs: instant(run.busyMs),
+    workedMs: instant(run.workedMs),
     skipped: loadSkips(run.skipped),
   };
-  return withoutUndefined(loaded, ["timeoutMinutes", "access", "deliver", "checkKey", "busySince", "restedMs", "skipped"]);
+  return withoutUndefined(loaded, ["timeoutMinutes", "access", "deliver", "checkKey", "busyMs", "workedMs", "skipped"]);
 }
 
 const REQUEST_ACTIONS = new Set<RoutineRequestOperation["action"]>(["create", "update", "pause", "resume", "run_now", "delete"]);
@@ -156,4 +156,31 @@ export function loadRequestReceipts(value: unknown): RoutineRequestReceipt[] {
     typeof receipt?.fingerprint === "string" && /^[a-f0-9]{64}$/.test(receipt.fingerprint) &&
     typeof receipt?.resultId === "string" &&
     Number.isFinite(receipt?.appliedAt));
+}
+
+/** The receipt of a request already applied; null when there is none. One that names another card throws. */
+export function matchingRequestReceipt(receipts: readonly RoutineRequestReceipt[], request: RoutineRequestCommit): RoutineRequestReceipt | null {
+  const receipt = receipts.find((candidate) => candidate.requestId === request.requestId);
+  if (!receipt) return null;
+  if (
+    receipt.action !== request.action ||
+    receipt.messageId !== request.messageId ||
+    receipt.botId !== request.botId ||
+    receipt.threadId !== request.threadId ||
+    receipt.fingerprintVersion !== request.fingerprintVersion ||
+    receipt.fingerprint !== request.fingerprint
+  ) {
+    throw new Error("Routine request receipt does not match this confirmation card");
+  }
+  return receipt;
+}
+
+/** Keeps the receipt of a request just applied, newest first; applied before with another result, it throws. */
+export function rememberRequest(receipts: RoutineRequestReceipt[], request: RoutineRequestCommit, resultId: string, appliedAt: number): void {
+  const existing = matchingRequestReceipt(receipts, request);
+  if (existing) {
+    if (existing.resultId !== resultId) throw new Error("Routine request receipt has another result");
+    return;
+  }
+  receipts.unshift({ ...request, resultId, appliedAt });
 }

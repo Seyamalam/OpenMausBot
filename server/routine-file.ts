@@ -31,6 +31,8 @@ export interface RoutineFileContents {
   ownerNotices: RoutineOwnerNotice[];
   holds: RoutineHoldCause[];
   startupLaunchId: string | undefined;
+  /** The one look for routines an earlier version switched off (routine-no-start.ts) was taken. */
+  noStartOffsChecked: boolean;
 }
 
 /** `reason` never quotes the file: a JSON error can echo a fragment of it. */
@@ -61,6 +63,7 @@ export function readRoutineFile(file: string, now: number): RoutineFileRead {
       ownerNotices: loadOwnerNotices(disk.ownerNotices),
       holds: holdCauses(disk.holds),
       startupLaunchId: typeof disk.startupLaunchId === "string" ? disk.startupLaunchId : undefined,
+      noStartOffsChecked: disk.noStartOffsChecked === true,
     };
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code === "ENOENT") return { state: "missing" };

@@ -1386,8 +1386,9 @@ describe("RoutineManager", () => {
     expect(routine.timeoutMinutes).toBe(5);
     expect(h.manager.update(routine.id, { timeoutMinutes: null })).not.toHaveProperty("timeoutMinutes");
     expect(h.manager.create({ ...input, name: "Unlimited" })).not.toHaveProperty("timeoutMinutes");
-    expect(() => h.manager.create({ ...input, timeoutMinutes: 4 })).toThrow(/5 to 240/);
-    expect(() => h.manager.create({ ...input, timeoutMinutes: 241 })).toThrow(/5 to 240/);
+    expect(() => h.manager.create({ ...input, timeoutMinutes: 4 })).toThrow(/5 to 1440/);
+    expect(h.manager.create({ ...input, name: "A long build", timeoutMinutes: 1_440 }).timeoutMinutes).toBe(1_440);
+    expect(() => h.manager.create({ ...input, timeoutMinutes: 1_441 })).toThrow(/5 to 1440/);
   });
 
   it("validates interval cadence and preserves its explicit anchor", () => {

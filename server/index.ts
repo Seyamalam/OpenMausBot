@@ -284,7 +284,7 @@ import { createCloudMoveRoutes } from "./cloud-move-http.ts";
 import { RESTART_EXIT_CODE } from "./restart.ts";
 import { applyIncludedXMessage, holdIncludedServices, hostingCredential, researchCredential, trialCreditCredential, xCredential, xResearchStatus } from "./included-services.ts"; import { applyPhoneLinkMessage, phoneLinkPart } from "./phone-link.ts"; import { createResearchAvailability } from "./research.ts";
 import { CloudCreditProvider } from "./cloud-credit-provider.ts";
-import { createCreditMoves } from "./cloud-credit-moves.ts"; import { createRoutineHoldsHost } from "./host/routine-holds-host.ts";
+import { createCreditMoves } from "./cloud-credit-moves.ts"; import { createRoutineHoldsHost } from "./host/routine-holds-host.ts"; import { tellTurnedBackOn } from "./host/routines-turned-back-on.ts";
 import { TRIAL_CREDIT_OWN_AI, TRIAL_KEY_HELD } from "./trial-credit.ts"; import { createHeldKeys } from "./cloud-held-keys.ts";
 import type { ProviderInstance } from "./contracts.ts";
 import { readyToRun, selectDefaultModelSelection, withInstanceConfig, withNewBotEffort, type SelectableInstance } from "./default-model-selection.ts"; import { configIdentity, createTestedAi } from "./tested-ai.ts"; import { instanceLook } from "./provider-icon.ts";
@@ -8868,7 +8868,7 @@ routines = new RoutineManager({
     }
   },
   interruptGoal: interruptRoutineGroupGoal,
-  onRunChanged: (run) => { syncRoutineRunToSource(run); }, onReadable: () => broadcast({ kind: "config", ...configStatus() }),
+  onRunChanged: (run) => { syncRoutineRunToSource(run); }, moveFrozen: () => moveFreeze.frozen(), restartsToReload: () => { if (!CLOUD_HOME) return false; restartRequested = true; gracefulShutdown(); return true; }, onReadable: routinesReadable,
   onRunCut: (run) => run.groupId ? coordinator.cancelRoom(run.groupId, run.threadId!, ROUTINE_RESTARTED) : coordinator.cancelDirect(run.threadId!, ROUTINE_RESTARTED),
   onRunFailed: (run, alert) => {
     const bot = store.bot(run.botId);
@@ -8887,7 +8887,8 @@ routines = new RoutineManager({
     notify(buildNotification("routine-deferred", routineSourceOwner(run)?.bot ?? bot, routineSourceThread(run) ?? bot.threadId, detail));
   },
 });
-phones.adoptRoutines(); routineHolds?.attach(routines); outsideLineage.settle(routines.listRuns(), automationDestinations.eventChat);
+/** What start does with the routines once they are made, done again when routines.json could not be read at start and can be now. A Cloud home starts afresh instead (`restartsToReload`): who owns its routines is settled only at start. */ function routinesReadable() { phones.adoptRoutines(); routineHolds?.attach(routines!); outsideLineage.settle(routines!.listRuns(), automationDestinations.eventChat); tellTurnedBackOn(store, routines!.takeTurnedBackOn()); routines!.clearFrozenResultsThreads(); broadcast({ kind: "config", ...configStatus() }); }
+phones.adoptRoutines(); routineHolds?.attach(routines); outsideLineage.settle(routines.listRuns(), automationDestinations.eventChat); tellTurnedBackOn(store, routines.takeTurnedBackOn());
 // Settle Cloud ownership before anything is served and before any routine can run.
 if (CLOUD_HOME && CLOUD_OWNER_KEY && cloudRoutineAuthors) {
   cloudHome = settleCloudHome({ file: join(DATA_DIR, "cloud-owner.json"), machineId: CLOUD_HOME.machineId, ownerKey: CLOUD_OWNER_KEY, nobodyKey: CLOUD_NOBODY_KEY,

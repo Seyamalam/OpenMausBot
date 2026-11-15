@@ -42,7 +42,7 @@ export function nextDueOf(routines: readonly Due[], runs: readonly Run[], now: n
   return due.length ? Math.min(...due) : null;
 }
 
-type Started = Run & Pick<RoutineRun, "startedAt" | "timeoutMinutes" | "waitedMs" | "restedMs" | "asked" | "waitingSince">;
+type Started = Run & Pick<RoutineRun, "startedAt" | "timeoutMinutes" | "waitedMs" | "workedMs" | "asked" | "target">;
 /** When this process's scheduler next has work: a routine's next run, or its checks once `checksFrom` has passed; a queued
  * run (now, or its retry); a started run reaching its limit (routine-bounds.ts). `skip` leaves out routines whose target is gone. */
 export function schedulerDueOf<R extends Due>(routines: readonly R[], runs: readonly Started[], now: number, checksFrom: number, skip: (routine: R) => boolean = () => false): number | null {
